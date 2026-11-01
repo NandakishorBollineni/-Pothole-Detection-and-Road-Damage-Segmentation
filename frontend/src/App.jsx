@@ -19,9 +19,11 @@ import ImageViewer from './components/ImageViewer';
 import ModelComparisonTab from './components/ModelComparisonTab';
 import ResearchTab from './components/ResearchTab';
 import AuditHistoryTab from './components/AuditHistoryTab';
+import { API_BASE } from './config/api';
+import fallbackData from './data/fallbackData.json';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('inspector'); // 'inspector' | 'comparison' | 'research' | 'history'
+  const [activeTab, setActiveTab] = useState('inspector');
   const [samples, setSamples] = useState([]);
   const [selectedSample, setSelectedSample] = useState('');
   const [modelChoice, setModelChoice] = useState('multiscale');
@@ -31,32 +33,59 @@ export default function App() {
   const [selectedInstanceId, setSelectedInstanceId] = useState(null);
   const [healthStatus, setHealthStatus] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
-  // Load samples and health
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/health')
+    // Check API health
+    fetch(`${API_BASE}/api/health`)
       .then((res) => res.json())
-      .then((data) => setHealthStatus(data))
-      .catch((err) => console.log('Backend not connected yet', err));
+      .then((data) => {
+        setHealthStatus(data);
+        setIsDemoMode(false);
+      })
+      .catch((err) => {
+        console.log('Backend not reachable, switching to interactive demo mode', err);
+        setIsDemoMode(true);
+      });
 
-    fetch('http://127.0.0.1:8000/api/samples')
+    // Fetch samples
+    fetch(`${API_BASE}/api/samples`)
       .then((res) => res.json())
       .then((data) => {
         if (data.samples && data.samples.length > 0) {
           setSamples(data.samples);
           setSelectedSample(data.samples[0].id);
-          // Auto run initial inspection on first sample
           triggerInspection(data.samples[0].id, null, 'multiscale');
         }
       })
-      .catch((err) => console.log('Samples fetch error', err));
+      .catch(() => {
+        // Fallback to pre-compiled benchmark samples
+        if (fallbackData.samples && fallbackData.samples.length > 0) {
+          setSamples(fallbackData.samples);
+          setSelectedSample(fallbackData.samples[0].id);
+          loadFallbackInspection(fallbackData.samples[0].id, 'multiscale');
+        }
+      });
   }, []);
+
+  const loadFallbackInspection = (sampleId, model) => {
+    const s = fallbackData.samples.find((item) => item.id === sampleId) || fallbackData.samples[0];
+    const isMulti = (model || modelChoice) === 'multiscale';
+    setInspectionResult({
+      inspection_id: 1,
+      filename: s.id,
+      model_used: isMulti ? 'MultiScale-RoadNet' : 'Baseline-UNet',
+      original_image_base64: s.original_base64,
+      overlay_image_base64: isMulti ? s.overlay_base64 : s.baseline_overlay_base64,
+      assessment: isMulti ? s.assessment : s.baseline_assessment,
+    });
+  };
 
   const triggerInspection = async (sampleName, fileObj, model) => {
     setIsInspecting(true);
     setErrorMsg(null);
     try {
-      let url = `http://127.0.0.1:8000/api/predict?model_choice=${model || modelChoice}`;
+      let url = `${API_BASE}/api/predict?model_choice=${model || modelChoice}`;
       let options = { method: 'POST' };
 
       if (fileObj) {
@@ -71,9 +100,15 @@ export default function App() {
       if (!res.ok) throw new Error('Inspection API request failed');
       const data = await res.json();
       setInspectionResult(data);
+      setIsDemoMode(false);
     } catch (err) {
-      console.error(err);
-      setErrorMsg('Failed to run road damage inspection. Ensure FastAPI backend is running on port 8000.');
+      console.warn('API error, falling back to local benchmark demo mode:', err);
+      if (sampleName) {
+        loadFallbackInspection(sampleName, model || modelChoice);
+        setIsDemoMode(true);
+      } else {
+        setErrorMsg('Custom image upload requires an active local backend. For instant evaluation, please select one of the benchmark road samples above!');
+      }
     } finally {
       setIsInspecting(false);
     }
@@ -89,8 +124,10 @@ export default function App() {
   };
 
   const handleGenerateReport = () => {
-    if (inspectionResult?.inspection_id) {
-      window.open(`http://127.0.0.1:8000/api/report/${inspectionResult.inspection_id}`, '_blank');
+    if (inspectionResult?.inspection_id && !isDemoMode) {
+      window.open(`${API_BASE}/api/report/${inspectionResult.inspection_id}`, '_blank');
+    } else {
+      window.print();
     }
   };
 
@@ -336,14 +373,14 @@ export default function App() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            color: '#34d399',
+            color: isDemoMode ? '#38bdf8' : '#34d399',
             fontSize: '11px',
-            background: 'rgba(16, 185, 129, 0.1)',
+            background: isDemoMode ? 'rgba(56, 189, 248, 0.1)' : 'rgba(16, 185, 129, 0.1)',
             padding: '2px 8px',
             borderRadius: '12px'
           }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399' }} />
-            PyTorch CPU Active
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isDemoMode ? '#38bdf8' : '#34d399' }} />
+            {isDemoMode ? 'Interactive Benchmark Mode' : 'PyTorch Live Active'}
           </span>
         </div>
       </footer>

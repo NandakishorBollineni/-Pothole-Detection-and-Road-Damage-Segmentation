@@ -1,47 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Award, CheckCircle, BarChart3, Layers, Cpu, ShieldCheck } from 'lucide-react';
+import { API_BASE } from '../config/api';
+import fallbackData from '../data/fallbackData.json';
 
 export default function ResearchTab() {
   const [benchmarkData, setBenchmarkData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/benchmark')
+    fetch(`${API_BASE}/api/benchmark`)
       .then((res) => res.json())
       .then((data) => {
         setBenchmarkData(data.benchmarks);
         setLoading(false);
       })
       .catch((err) => {
-        console.error('Failed to load benchmarks', err);
+        console.warn('Backend benchmark endpoint unreachable, loading fallback benchmarks:', err);
+        setBenchmarkData(fallbackData.benchmarks);
         setLoading(false);
       });
   }, []);
 
   const b = benchmarkData?.baseline || {
     parameters: 4318401,
-    model_size_mb: 51.93,
-    mean_iou: 0.6241,
-    dice_score: 0.7685,
-    precision: 0.8124,
-    recall: 0.7291,
-    small_pothole_iou: 0.4182,
-    medium_pothole_iou: 0.6354,
-    large_pothole_iou: 0.7289,
-    avg_latency_ms: 54.2,
+    model_size_mb: 49.52,
+    mean_iou: 0.4251,
+    dice_score: 0.5966,
+    precision: 0.4965,
+    recall: 0.7473,
+    small_pothole_iou: 0.03,
+    medium_pothole_iou: 0.3356,
+    large_pothole_iou: 0.4723,
+    avg_latency_ms: 163.23,
   };
 
   const p = benchmarkData?.proposed || {
     parameters: 2137172,
-    model_size_mb: 25.68,
-    mean_iou: 0.7418,
-    dice_score: 0.8517,
-    precision: 0.8742,
-    recall: 0.8304,
-    small_pothole_iou: 0.6835,
-    medium_pothole_iou: 0.7621,
-    large_pothole_iou: 0.7942,
-    avg_latency_ms: 28.6,
+    model_size_mb: 24.6,
+    mean_iou: 0.5087,
+    dice_score: 0.6744,
+    precision: 0.6096,
+    recall: 0.7545,
+    small_pothole_iou: 0.0431,
+    medium_pothole_iou: 0.5072,
+    large_pothole_iou: 0.5361,
+    avg_latency_ms: 64.88,
   };
 
   return (
