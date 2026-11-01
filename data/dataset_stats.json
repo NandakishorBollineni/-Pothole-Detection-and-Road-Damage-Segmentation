@@ -1,0 +1,29 @@
+{
+  "train": {
+    "images": 80,
+    "instances": 110,
+    "scales": {
+      "small": 1,
+      "medium": 6,
+      "large": 103
+    }
+  },
+  "val": {
+    "images": 5,
+    "instances": 5,
+    "scales": {
+      "small": 0,
+      "medium": 0,
+      "large": 5
+    }
+  },
+  "test": {
+    "images": 5,
+    "instances": 5,
+    "scales": {
+      "small": 0,
+      "medium": 0,
+      "large": 5
+    }
+  }
+}

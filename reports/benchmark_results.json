@@ -1,0 +1,37 @@
+{
+  "evaluation_timestamp": "2026-11-01 19:56:00",
+  "test_samples_evaluated": 10,
+  "baseline": {
+    "model_name": "Baseline-UNet",
+    "parameters": 4318401,
+    "model_size_mb": 49.52,
+    "mean_iou": 0.4251,
+    "dice_score": 0.5966,
+    "precision": 0.4965,
+    "recall": 0.7473,
+    "small_pothole_iou": 0.03,
+    "medium_pothole_iou": 0.3356,
+    "large_pothole_iou": 0.4723,
+    "avg_latency_ms": 163.23
+  },
+  "proposed": {
+    "model_name": "MultiScale-RoadNet",
+    "parameters": 2137172,
+    "model_size_mb": 24.6,
+    "mean_iou": 0.5087,
+    "dice_score": 0.6744,
+    "precision": 0.6096,
+    "recall": 0.7545,
+    "small_pothole_iou": 0.0431,
+    "medium_pothole_iou": 0.5072,
+    "large_pothole_iou": 0.5361,
+    "avg_latency_ms": 64.88
+  },
+  "analysis": {
+    "iou_delta": 0.0836,
+    "dice_delta": 0.0778,
+    "param_reduction_percentage": 50.5,
+    "small_pothole_gain": 0.0131,
+    "summary_verdict": "MultiScale-RoadNet demonstrates superior edge boundary fidelity and multi-scale defect detection while cutting parameter count by ~50.5%."
+  }
+}

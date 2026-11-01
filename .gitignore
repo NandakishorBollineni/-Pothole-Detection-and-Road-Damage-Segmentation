@@ -1,0 +1,30 @@
+# Virtual Environment
+.venv/
+env/
+venv/
+ENV/
+
+# Node & Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Dataset Temporary Extraction Cache (keep processed samples)
+data/raw/
+
+# Local SQLite Database
+backend/inspections.db
+
+# OS Artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
